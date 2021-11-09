@@ -2,8 +2,11 @@
 a demo of animegan2 infer by ncnn
 
 ## Result  
+### celeba  
 ![](celeba.jpg)  
+### face_paint_512_v1  
 ![](face_paint_512_v1.jpg)  
+### face_paint_512_v2  
 ![](face_paint_512_v2.jpg)  
 
 
