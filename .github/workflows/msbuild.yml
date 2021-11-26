@@ -1,0 +1,44 @@
+name: windows-x64-gpu-vs2019
+on: 
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+jobs:
+  windows-vs2019-gpu:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: cache-vulkansdk
+      id: cache-vulkansdk
+      uses: actions/cache@v2.1.6
+      with:
+        path: "VulkanSDK"
+        key: VulkanSDK-1.1.114.0-Installer
+    - name: vulkansdk
+      if: steps.cache-vulkansdk.outputs.cache-hit != 'true'
+      run: |
+        Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.1.114.0/windows/VulkanSDK-1.1.114.0-Installer.exe?Human=true -OutFile VulkanSDK-1.1.114.0-Installer.exe
+        7z x -aoa ./VulkanSDK-1.1.114.0-Installer.exe -oVulkanSDK
+        Remove-Item .\VulkanSDK\Demos, .\VulkanSDK\glslang, .\VulkanSDK\Samples, .\VulkanSDK\shaderc, .\VulkanSDK\spirv-tools, .\VulkanSDK\Third-Party, .\VulkanSDK\Tools, .\VulkanSDK\Tools32 -Recurse
+    - name: build
+      run: |
+        Invoke-WebRequest -Uri https://github.com/nihui/opencv-mobile/releases/download/v13/opencv-mobile-4.5.3-windows-vs2019.zip -OutFile opencv-mobile-4.5.3-windows-vs2019.zip
+        Invoke-WebRequest -Uri https://github.com/Tencent/ncnn/releases/download/20210720/ncnn-20210720-windows-vs2019.zip -OutFile ncnn-20210720-windows-vs2019.zip
+        7z x ./opencv-mobile-4.5.3-windows-vs2019.zip
+        7z x ./ncnn-20210720-windows-vs2019.zip
+        $env:VULKAN_SDK="$(pwd)/VulkanSDK"
+        mkdir build; cd build
+        cmake ..
+        cmake --build . --config Release -j 2
+    - name: package
+      run: |
+        mkdir animegan2-ncnn-vulkan
+        Copy-Item -Verbose -Path "build\Release\animegan2-ncnn-vulkan.exe" -Destination "animegan2-ncnn-vulkan"
+        Copy-Item -Verbose -Path "C:\windows\system32\vcomp140.dll" -Destination "animegan2-ncnn-vulkan"
+        7z a -r animegan2-ncnn-vulkan.zip animegan2-ncnn-vulkan
+    - name: upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: animegan2-ncnn-vulkan
+        path: animegan2-ncnn-vulkan.zip
