@@ -17,10 +17,10 @@ static int styletransfer(const ncnn::Net& net, const cv::Mat& bgr, cv::Mat& outb
     int target_w = 512;
     int target_h = 512;
 
-	const float mean_vals[3] = { 127.5f, 127.5f,  127.5f };
-	const float norm_vals[3] = { 1 / 127.5f, 1 / 127.5f, 1 / 127.5f };
+    const float mean_vals[3] = { 127.5f, 127.5f,  127.5f };
+    const float norm_vals[3] = { 1 / 127.5f, 1 / 127.5f, 1 / 127.5f };
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR2RGB, w, h, target_w, target_h);
-	in.substract_mean_normalize(mean_vals, norm_vals);
+    in.substract_mean_normalize(mean_vals, norm_vals);
     ncnn::Mat out;
     {
         ncnn::Extractor ex = net.create_extractor();
@@ -30,19 +30,19 @@ static int styletransfer(const ncnn::Net& net, const cv::Mat& bgr, cv::Mat& outb
     }
 
     cv::Mat result(out.h, out.w, CV_32FC3);
-	for (int i = 0; i < out.c; i++)
-	{
-		float* out_data = out.channel(i);
-		for (int h = 0; h < out.h; h++)
-		{
-			for (int w = 0; w < out.w; w++)
-			{
-				result.at<cv::Vec3f>(h, w)[2-i] = out_data[h * out.h + w];
-			}
-		}
-	}
-	cv::Mat result8U(out.h, out.w, CV_8UC3);
-	result.convertTo(result8U, CV_8UC3, 127.5, 127.5);
+    for (int i = 0; i < out.c; i++)
+    {
+        float* out_data = out.channel(i);
+        for (int h = 0; h < out.h; h++)
+        {
+            for (int w = 0; w < out.w; w++)
+            {
+                result.at<cv::Vec3f>(h, w)[2-i] = out_data[h * out.h + w];
+            }
+        }
+    }
+    cv::Mat result8U(out.h, out.w, CV_8UC3);
+    result.convertTo(result8U, CV_8UC3, 127.5, 127.5);
     result8U.copyTo(outbgr);
     return 0;
 }
